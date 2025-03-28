@@ -1,0 +1,2 @@
+This sub-folder contains the live coding activities which we will work in during class. Please do not work in the COURSE MATERIALS directory.
+Create a folder called LIVECODING in your Home directory and save your files there.

@@ -1,0 +1,147 @@
+---
+title: "How did the pandemic change the movement of people around the world?"
+subtitle: "Ranjini Grove"
+author: "Department of Statistics"
+output: 
+    html_document
+
+---
+
+```{r setup, include=FALSE}
+#set global options
+knitr::opts_chunk$set(echo = FALSE)
+
+#load packages
+library(mobpack)
+
+library(tidyverse)
+library(reactable)
+library(glue)
+library(shiny)
+```
+
+
+
+
+## Introduction
+
+In this activity, we will examine how the COVID-19 pandemic changed the movement of people all around the world. The data for the activity comes from Google's [Our World in Data](https://ourworldindata.org/covid-mobility-trends), which measures visitor numbers to specific categories of locations (e.g., grocery stores, train stations, parks) every day across several countries. Our focus is on the subset of data from the early days of the pandemic: from March 2020 to August 2020.
+
+
+The learning goals for today are:
+
+1. Get acquainted with the programming toolkit.
+2. Visualize the initial effect of the pandemic on mobility patterns.
+3. Make comparisons across countries.
+
+## Getting Started
+
+Please introduce yourselves to each other.You have about 20 minutes to work on this.
+  
+
+## The Google Mobility Dataset
+
+The data set is too large to show in its entirety, however, a quick look at the first several rows gives us a good idea:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+mobility_data_full<-get_mob_sel()[,c(4,10,12,13)]
+
+reactable::reactable(head(mobility_data_full))
+```
+
+A description of the information in a dataset is typically referred to as a **codebook** and is shown below. 
+
+| Name            |  Description
+|:----------------|:--------------------------------
+| `country_region` | Name of country
+| `date`          | The date that the measurement was taken. 
+| `places_category` | Type of location (residence, grocery, retail, park, work)
+| `percent change from baseline` | Change in number of visitors from baseline (for residential locations only, we use duration of visit). 
+
+Baseline days represent a normal value for that day of the week, given as the average value over a five‑week period from January 3rd to February 6th 2020. Measuring change relative to a normal value for that day of the week is helpful because people obviously often have different routines on weekends versus weekdays.
+
+
+
+<hr>
+</hr>
+
+
+## Visualizing the Data
+
+The following lineplot shows changes in mobility patterns in Italy, one of the first countries in the western world to be hit by the coronavirus.  
+
+```{r}
+mobility_data_italy<-mobility_data_full %>% 
+             filter(country_region == "Italy") 
+
+mindate<-mobility_data_italy %>% summarize(min(date) ) %>% pull()
+maxdate <- mobility_data_italy %>% summarize(max(date) ) %>% pull()           
+ggplot(data=mobility_data_italy) + 
+            geom_line(mapping=aes(x=date,y=percent_change_from_baseline, color=places_category, linetype=places_category) ) +
+            ylab("Percent Change")+
+            labs(title="Google mobility metric for Italy",
+                subtitle=glue("Data from {mdate1} to {mdate2}.", mdate1 = as.Date(mindate), mdate2=as.Date(maxdate), .sep =" " ) )
+
+```
+
+<hr>
+</hr>
+
+#### Discuss
+
+1. Can you spot the start of COVID lockdowns?  
+2. Why the spike in early June in visits to the parks? 
+3. Do you see the weekend effect in the trend lines?
+
+<hr>
+</hr>
+
+## Comparing Countries
+
+Now let's compare Italy to the United States.  What trends seem similar across countries? What seems different?
+
+```{r}
+# Define a list of countries you would like to plot.
+countries<-c("Italy", "United States")
+
+# Extract the data for these countries from the full dataset. 
+mobility_data_subset <-mobility_data_full %>% filter(country_region %in% countries) 
+
+mindate <- mobility_data_subset %>% summarize(min(date) ) %>% pull()
+maxdate <- mobility_data_subset %>% summarize(max(date) ) %>% pull()
+
+# Plotting code! We specify our dataset, 
+# then the X and Y variables, as
+# well as the variable that will correspond to the color. 
+# 
+ggplot(mobility_data_subset, aes(x=date,y=percent_change_from_baseline,color=places_category)) +
+   geom_line() +
+   facet_wrap(facets=vars(country_region)) +
+   theme(legend.position = "bottom")+
+  ylab("Percent Change")+
+  labs(title="Google mobility metrics for Italy and the U.S.",
+                subtitle=glue("Data from {mdate1} to {mdate2}.", mdate1=as.Date(mindate), mdate2 = as.Date(maxdate), .sep =" " ) )
+```
+
+## Your turn!
+
+Which countries are you most curious about? Pick two countries you wish to compare, but first check that the country is in the dataset by using the interactive table in the appendix. Then open the file `covidmobility.Rmd` on JupyterHub and take a look at the code to see if you can spot where the country names are specified. Change them to the two you are interested in. Knit the document and voila!  
+
+## Appendix
+
+A list of countries in the `google_mobility_data` data frame is provided below.
+
+```{r list-of-countries, echo=F}
+
+list_of_countries <- mobility_data_full %>% 
+                    select(country_region) %>%
+                    distinct(country_region) %>%
+                    arrange(country_region)
+reactable::reactable(list_of_countries, searchable=TRUE)                  
+```
+
+
+## Acknowledgements
+
+This activity was developed by Ranjini Grove for UW Stat 311. Thanks go to Mine &#199;etinkaya-Rundel for her inspiring workshops on teaching introductory statistics and data science, and to Vincent Carey for his help with procuring the data and with the shiny App. 
+
