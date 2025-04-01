@@ -1,0 +1,154 @@
+---
+title: "Confounding variables"
+subtitle: "STAT 311"
+author: Ranjini Grove
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+
+library(tidyverse)     #ggplot is part of tidyverse
+library(mosaicData)    #data is in this package
+library(janitor)       #makes pretty tables
+```
+
+
+## Statistical Lesson  
+
+Misleading conclusions can result when confounding variables are present. 
+
+## The Data 
+ 
+
+The dataset we will look at today is called `Whickham` and it is from the **mosaicData** package. The following is from the description in the package.
+
+*Data on age, smoking, and mortality from a one-in-six survey of the electoral roll in Whickham, a mixed urban and rural district near Newcastle upon Tyne, in the UK. The survey was conducted in 1972-1974 to study heart disease and thyroid disease. A follow-up on those in the survey was conducted twenty years later.*
+
+The `Whickham` dataset contains a subset of data on 1,314 women from the survey sample. For each woman in the dataset, the following information is recorded.
+
+ - `outcome` survival status after 20 years
+ 
+ - `smoker` smoking status at time of the first survey
+ 
+ - `age` age in years at the time of the first survey
+
+
+```{r fig.margin=TRUE, fig.align="right",out.width="80%", echo=FALSE}
+knitr::include_graphics("Whickham.png")
+```
+
+
+## Exploring the data
+
+Let's load the data and take a peek:
+
+
+```{r look-at-data, echo=FALSE}
+glimpse(Whickham)
+```
+
+
+## Exercises
+
+### Exercise 1
+   
+How many variables are in this data set? Fill in the description of the variables in the table below and also give the range of values for it. We refer to such a table as a codebook)
+
+|Name of variable | Description|
+|---------------- | -----------|
+|`outcome`        |            |
+|`smoker`         |            |
+|`age`            |            |
+
+  
+### Exercise 2
+
+The primary goal of collecting this data was to see how smoking impacts survival. Which is explanatory and which is the response? What would you expect the relationship between smoking and survival outcome to be?
+
+### Exercise 3
+
+Below is a summary table obtained from the dataset. Use R as a calculator to compare the % of smokers who are alive with the % non-smokers who are alive.  Does the relationship between smoking and survival match with your expectation? 
+
+```{r data-summary, echo=FALSE}
+Whickham %>% 
+   tabyl(smoker, outcome) %>% 
+   adorn_totals(where=c("row", "col")) 
+
+
+```
+   
+   
+
+```{r calculator-code, echo=TRUE}
+#write code to do calculations for problem 4 in this chunk
+
+```
+
+
+### Exercise 4
+
+Let's try and expand the picture by bringing a relevant factor - age at the time of the first survey - into view. The following box plot compares the ages of smokers and non-smokers. Do smokers tend to be younger? older?
+
+
+```{r age-smoking-graph, echo=FALSE}
+
+ggplot(data = Whickham, 
+       mapping = aes(x = age, y = smoker)) + 
+        geom_boxplot()
+
+```
+
+
+### Exercise 5
+
+What do your answers to part 4 tell you about the variable `age` in this data set. How do they help you make sense of the counter-intuitive result in exercise 4?
+ 
+  
+  
+## A simple correction for confounding
+
+As we can see, confounding variables, if ignored, can lead to un-intuitive and even misleading conclusions about the relationship between smoking and survival. 
+
+**PARTICIPATION 1: Please do your calculations for exercise 6 and then record your answers from the table into CANVAS for the quiz titled Participation 1**
+
+### Exercise 6
+
+One simple strategy to account for `age`  is to make comparisons between smokers and non-smokers within reasonably similar age ranges. This is called **stratifying** on age.
+
+
+```{r, out.width="50%",echo=FALSE}
+
+Whickham <- Whickham %>%   #define new age variable
+            mutate(
+              age_cat = case_when(
+              age <= 44 ~ "18-44",
+              age > 44 & age <= 64 ~ "45-64",
+              age > 64 ~ "65+"))
+
+Whickham %>% tabyl(smoker, outcome, age_cat) %>%
+   adorn_totals(where=c("row", "col"))
+
+```
+
+Work in groups and use R as a calculator to calculate the % of non-smokers and % of smokers who are alive within each age group. I have create a new code chunk below for you to do your calculations. Then enter your answers in the table below.
+
+```{r exercise7}
+#calculate % smokers who are alive and % non-smokers who are 
+#alive in each age group
+
+```
+
+
+|Age group | % non-smokers alive | % smokers alive|
+|----------|---------------------|----------------|
+|18 - 44   |                     |                |
+|45 - 64   |                     |                |
+|65+       |                     |                |
+
+
+
+
+## Acknowledgment 
+
+This activity is based on a lab from [Data Science in a Box](https://datasciencebox.org/)
