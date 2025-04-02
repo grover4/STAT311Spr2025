@@ -7,6 +7,8 @@ output: html_document
 ---
 
 ```{r setup, include = FALSE}
+#Setup code chunk for initializing global options and
+#attach any necessary packages using the library function
 #Run this code chunk to load the packages in your interactive Environment
 
 library(tidyverse)     #ggplot is part of tidyverse
@@ -103,7 +105,7 @@ ggplot(data = Whickham,
 
 ### Exercise 5
 
-What do your answers to part 4 tell you about the variable `age` in this data set. How do they help you make sense of the counter-intuitive result in exercise 4?
+What does your answer to Exercise 4 tell you about the variable `age` in this data set. How does it help you make sense of the counter-intuitive result in Exercise 3?
  
   
   
