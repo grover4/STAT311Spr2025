@@ -7,6 +7,7 @@ output: html_document
 ---
 
 ```{r setup, include = FALSE}
+#Run this code chunk to load the packages in your interactive Environment
 
 library(tidyverse)     #ggplot is part of tidyverse
 library(mosaicData)    #data is in this package
@@ -41,7 +42,7 @@ knitr::include_graphics("Whickham.png")
 
 ## Exploring the data
 
-Let's load the data and take a peek:
+The following code lets us take a peek at the data. You can also load the data in your interactive Enviroment by typing `data(Whickham)` in the Console.
 
 
 ```{r look-at-data, echo=FALSE}
