@@ -1,0 +1,135 @@
+---
+title: "A grammar of data wrangling: Part 1 "
+subtitle: "STAT 311"
+author: "YOUR NAME HERE"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+In this lesson on the grammar of data wrangling, we will use `gapminder` dataset which is available in an R package of the same name. The `gapminder` dataframe tracks demographic data in countries of the world over time. You can visit their [website](https://www.gapminder.org) to see the breadth of projects they work on. 
+
+Let's load the packages we will need today. Note that we only need the `dplyr` package for the data manipulation verbs we will be using, however we will usually prefer to load `tidyverse`, the umbrella package which contains `dplyr` within it.
+
+```{r setup, include = FALSE}
+#load packages and set global options
+library(tidyverse)        #umbrella package
+library(gapminder)        #dataset is in this package
+
+```
+
+## Warm Up
+
+To learn more about the data set, you can bring up the help file with `?gapminder`. Let's also load the data using `data` and take a look at it in the spreadsheet editor.
+
+Take a look at the variable types  with the `glimpse` function. 
+
+* * * 
+
+## Part 1: select, filter, mutate, arrange
+
+Today we will practice using the data verbs `filter`, `select`, `arrange` and `mutate` in order to answer various queries. 
+
+
+## Exercises
+
+Working in groups, fill in the blanks for Exercises 1 - 5 to accomplish a specific task. Consult the slide deck "Introduction to Data: Data Manipulation" for help. Each code chunk has the `eval` option set to FALSE. Once you have filled in the blanks you may delete this option so your code will run when the document is knitted.
+
+### Exercise 1
+
+Use `filter` to extract the data for Canada and select the variables country, continent, year, and lifeExp. Replace [EQUAL TO] with the logical operator for "exactly equal to". 
+
+
+
+```{r ex1, eval = FALSE}
+    
+gapminder %>% 
+        filter( country [EQUAL TO] "___") %>%
+              select( ___, ___, ____, ____ )
+
+```
+
+### Exercise 2
+
+Which countries had a life expectancy below 50 years of age in 2007? Think about whether you are extracting rows or columns. Replace [LESS THAN] with the logical operator for "less than" and [EQUAL TO] with the logical operator for "exactly equal to"
+
+```{r ex2, eval = FALSE}
+
+gapminder %>% 
+        ___( lifeExp [LESS THAN] 50, year [EQUAL TO] ___ )
+
+```
+
+### Exercise 3
+
+Which country had the higher life expectancy in 1977: Ireland or Brazil?
+Extract the rows for Ireland and Brazil for the year 1977 in the skeleton code below. Don't forget to replace [OR] with the logical operator for "or" and [EQUAL TO] with the logical operator for "exactly equal to" in 3 places
+
+```{r ex3, eval = FALSE}
+
+gapminder %>% 
+     ___ ( year [EQUAL TO] ___,
+             country [EQUAL TO] "___" [OR] 
+             country [EQUAL TO] "___" )
+
+```
+
+
+### Exercise 4 
+
+a. Sort the countries by life expectancy from smallest to largest.  I have piped the result to the function `slice_head` at the end to just print the first five rows.  
+
+```{r ex4a, eval = FALSE}
+
+gapminder %>% 
+       ___ (___) %>% 
+                  slice_head(n = 5)  #only print top 5 rows             
+
+```
+
+
+b. Extract the rows for 2007 and then sort the countries in descending order of `gdpPercap` and list the 5 countries with the highest values of GDP per capita.
+
+```{r ex4b, eval = FALSE}
+
+gapminder %>% 
+       ___( ___ ) %>% 
+        ___ (___(gdpPercap) ) %>% 
+                       slice_head(___)
+        
+
+```
+
+### Exercise 5
+
+Create a new variable called `gdp` which recovers each country's GDP by multiplying the population `pop` and GDP per capita `gdpPercap`. Add the new variable to the `gapminder` data frame. Examine the dataframe in your Enviromment. What do you notice about where the new variable is located? 
+
+```{r ex5, eval = FALSE}
+gapminder <- gapminder %>% 
+                         mutate( gdp = ___ * ___ )
+
+```
+
+
+**More Practice: Answer the remaining problems by collaborating with your neighbors in small groups. Create a new code chunk below each question and write code to answer it. **
+
+### Exercise 6
+
+Which countries had a life expectancy (`lifeExp`)  greater than or equal to 80 years in 2002?
+
+### Exercise 7
+
+What were the five most populous country in Europe in 1992?  (You will want to first extract the rows from the data for Europe in 1992, then arrange in descending order on `pop`)
+
+### Exercise 8
+
+Which country in the Americas had the shortest life expectancy in the year 1962? 
+
+### Exercise 9
+
+Create a new variable `log_pop` which is the natural logarithm (`log`) of the population variable. Add the new variable to the gapminder data frame. (Then click on the `gapminder` dataframe in the Environment to see the column you just added!)
+
+### Exercise 10
+
+Which country had the higher GDP per capita (`gdpPercap`) in 1977? United States or United Kingdom? (Hint: you will want to extract the rows of data for these two countries in 1977)
+
+
