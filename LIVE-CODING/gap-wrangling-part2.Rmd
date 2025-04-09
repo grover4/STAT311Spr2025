@@ -1,0 +1,156 @@
+---
+title: "A grammar of data wrangling: Part 2 "
+subtitle: "STAT 311"
+author: "YOUR NAME HERE"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+We now return to the `gapminder` data frame to answer more questions using the data verbs we learned today: count`, group_by` and `summarise`. 
+
+Let's load the packages we will need today by running the following code chunk using the green Play button. 
+
+```{r setup, include = FALSE}
+#load packages and set global options
+library(tidyverse)        #umbrella package
+library(gapminder)        #dataset is in this package
+
+```
+
+## Warm Up
+
+Load the data `gapminder` by typing `data(gapminder)` function in the Console and take a look at it in the spreadsheet editor.
+
+
+* * * 
+
+
+## Part 2: count, group_by, summarise
+
+Fill in the blanks in the code provided in each code chunk to accomplish a specific task. Consult the slide deck "Introduction to Data: Data Manipulation" for help. Each code chunk has the `eval` option set to FALSE. Once you have filled in the blanks you may delete this option so your code will run when the document is knitted.
+
+### Exercises
+
+
+### Exercise 1
+
+In the following code chunk, I have created a new dataframe called `gapminder_countries` which lists the distinct countries in `gapminder` and the continent they are located in.
+
+Run this code chunk and look at the resulting dataframe. 
+
+```{r country}
+
+gapminder_countries <- gapminder %>% 
+  select(country, continent) %>%
+  distinct(country, .keep_all = TRUE)
+                          
+```
+
+Which continent has the most countries in it? Which has the least?
+
+```{r ex1, eval = FALSE}
+
+gapminder_countries %>% 
+  count(___)
+
+```
+
+The remaining exercises refer to the original `gapminder` data frame.
+
+### Exercise 2
+
+Summarize the life expectancy `lifeExp`  by calculating the mean.
+
+```{r ex2, eval = FALSE}
+
+gapminder %>% 
+  summarise( mean_lifeExp = ___ )
+
+```
+
+
+### Exercise 3
+
+Summarize life expectancy `lifeExp` in Africa in 1952 by calculating the mean.
+
+```{r ex3, eval = FALSE}
+
+gapminder %>% 
+  filter( ___) %>%
+  summarise( mean_lifeExp = ___ )
+
+```
+
+
+### Exercise 4
+
+Summarize life expectancy `lifeExp` in 1952 for each continent separately by calculating the mean.
+
+```{r ex4, eval = FALSE}
+
+gapminder %>%
+  filter( year [EQUAL TO] ___) %>%
+  group_by(___) %>%
+  summarise( ___ )
+
+
+```
+
+
+
+### Exercise 5
+
+Summarize life expectancy `lifeExp` in 1952 for each continent separately by calculating the mean and median and sort the results in descending order by median life expectancy. 
+
+
+```{r ex5, eval = FALSE}
+
+gapminder %>% 
+  filter(___) %>%
+  group_by( ___) %>%
+  summarise( mean_lifeExp = ___, 
+             median_lifeExp = ___ ) %>%
+  arrange( ___ )
+
+```
+
+
+### Exercise 6
+
+Create a new variable called `popBil` which is the population in billions. For example, 8425333 is 842533/1000000000 = .0008425333 billions.  Then use this new variable to calculate the total population in the world for each year. 
+
+```{r ex6, eval = FALSE}
+
+gapminder %>% 
+      mutate( popBil = ___ ) %>% 
+      group_by(___) %>% 
+      summarise( total_pop = sum(___) ) 
+
+```
+
+
+**Participation 2: Please do your calculations for the remaining problems below and then record your answers in CANVAS for the quiz titled Participation 2**
+
+
+
+### Exericise 7
+
+Summarise the life expectancy `lifeExp` in 1952 by calculating the mean.
+
+
+### Exercise 8
+
+Summarise the life expectancy `lifeExp` in Asia in 1952 by calculating the mean. 
+
+### Exercise 9
+
+Summarise the life expectancy `lifeExp` for each continent in 2002 by calculating the median. Sort your results in descending order.
+
+
+### Exercise 10
+
+Create a new variable called `gdp` which recovers each country's GDP by multiplying the population `pop` and GDP per capita `gdpPercap`. Summarise the `gdp` for each country by calculating the total across all the years. Which 3 countries have the highest totals?
+
+ 
+
