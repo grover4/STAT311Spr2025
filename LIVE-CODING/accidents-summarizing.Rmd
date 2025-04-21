@@ -83,7 +83,7 @@ We will now examine two categorical variables - `light` and `hit_parked_car` - f
 
 The variable `light` describes the light conditions at the time of the accident. Make a frequency table using `count` to describe the distribution of `light`. 
 
-```{r part1-ex1, eval = F}
+```{r part1-ex1-count, eval = F}
 
 accidents %>% 
          ___(___) 
@@ -105,7 +105,7 @@ accidents <- accidents %>%
 
 Fill in the blanks to create a bar plot for `light_cat` without showing the NA category.
 
-```{r part1-ex1, eval = FALSE}
+```{r part1-ex1-plot, eval = FALSE}
 
 #bar plot of light_cat
 ggplot(data = ___,
