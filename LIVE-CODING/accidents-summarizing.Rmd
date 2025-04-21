@@ -130,9 +130,7 @@ The remaining exercises study the relationship between two categorical variables
 ### Exercise 1 
 
 
-Fill in the blanks to make a segmented bar plot to visualize the relationship between `light_cat` and `hit_parked_car`. Describe the relationship in words. 
-
-    Note: Think about which variable to place on the $x$ axis. Also, no need to include the NAs for `light_cat` in the graph.
+Fill in the blanks to make a segmented bar plot to visualize the relationship between `light_cat` and `hit_parked_car`. Describe the relationship in words. Think about which variable to place on the $x$ axis. Also, no need to include the NAs for `light_cat` in the graph.
 
 
 ```{r part2-ex1, eval = FALSE}
