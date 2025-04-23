@@ -1,0 +1,234 @@
+---
+title: "Summarizing categorical data "
+subtitle: "STAT 311"
+author: "Ranjini Grove"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Introduction
+
+Today we will look at traffic accident data in Seattle.
+The data are open and made available in a comma-separated-value (CSV) format by [Seattle Geodata](https://data-seattlecitygis.opendata.arcgis.com/datasets/5b5c745e0f1f48e7a53acec63a0022ab_0). It covers all recorded accidents in Seattle from Jan 1 2020 through Dec 16 2020; some of the variables were deleted for the purposes of this exercise.
+
+The goal for today is conduct a preliminary exploratory analysis of these data, with particular emphasis on summarizing a few categorical variables graphically and also in a tabular format.
+
+<!--- 
+
+The packages used for this analysis are loaded in the code chunk shown below. We will also need to read in the dataset `accidents.csv` since it is not part of any package. We can read it using the `read_csv` function from the **readr** package which is part of the **tidyverse** ecosystem. 
+For more information on importing datasets in R, please see [chapter 7](https://r4ds.hadley.nz/data-import) in the excellent open source reference **R for Data Science**.  
+
+--->
+
+
+```{r setup, include = FALSE}
+#specify global options, load packages, read data in this code chunk
+
+
+library(tidyverse)        #umbrella package
+library(janitor)          #for tables 
+
+accidents <- read_csv("accidents.csv")    #data is from the wild!
+```
+
+Before proceeding, load the packages and read in the data into  your working environment by running the first code chunk labeled as `setup`. Then open the dataset in the spreadsheet viewer and look at the data.
+
+Below is an excerpt of the data dictionary also known as the code book.  Note that it is long (there are lots of variables in the data), but we will be using a limited set of the variables in this tutorial.
+
+| Header                        |  Description
+|:----------------|:--------------------------------
+| `id` | unique identifier
+| `addr_type` | Collision address type: **Alley**, **Block**, **Intersection** 
+| `location` | Text description of the general location of the collision
+| `severity_code` |3 - fatality, 2b - serious injury, 2 -injury, 1 - property damage, 0 - unknown
+| `severity_desc   ` | Description of severity: **Fatality Collision**, **Injury Collision**, **Property Damage Only Collision**, **Serious Injury Collision**, **Unknown**
+| `collision_type` | Collision type: **Angles**, **Cycles**, **Head On**, **Left Turn**, **Parked Car**, **Pedestrian**, **Rear Ended**, **Right Turn**, **Sideswipe**
+| `person_count` | Number of people involved in the collision
+|`ped_count` |Number of pedestrians involved in the collision
+| `pedcyl_count` | Number of bicycles involved in the collision 
+|`veh_count`| Number of vehicles involved in the collision (0, 1, 2, etc)
+|`injuries`|Number of total injuries in the collision
+|`serious_injuries`|Number of serious injuries in the collision
+|`fatalities`| Number of fatalities in the collision
+|`inc_date`| Date of incident
+|`under_infl`| Whether or not the driver was under the influence of drugs or alcohol: **Y**, **N**
+|`weather`|A text description of the weather conditions during the collision
+|`road`|The condition of the road during the collision: **Dry**, **Wet**, **Ice**, **Sand/Mud/Dirt**, **Snow/Slush**, **Standing Water**, **Unknown**
+|`light`|Light conditions during the collision: **Dark - No Street Lights**, **Dark - Street Lights Off**, **Dark - Street Lights On**, **Dark - Unknown Lighting**, **Dusk**, **Dawn**, **Daylight**
+|`speeding`|  Whether or not speeding was a factor in the collision: **Y**, **N**
+|`hit_parked_car`|Whether or not the collision involved hitting a parked car: **Y**, **N**
+
+
+The following provides a snapshot of the variable types in the data. 
+
+```{r peek-at-data, echo = FALSE, message = FALSE, warning = FALSE}
+glimpse(accidents)
+
+```
+
+
+* * * 
+
+
+## Warm Up
+
+What does each row represent? A recorded accident, the registration number of a car, the location of an accident, an insurance claim? No code required.
+
+A recorded accident
+
+
+We will now examine two categorical variables - `light` and `hit_parked_car` - from this dataset individually. 
+
+## Part 1
+
+### Exercise 1
+
+The variable `light` describes the light conditions at the time of the accident. Make a frequency table using `count` to describe the distribution of `light`. 
+
+```{r part1-ex1-count}
+
+accidents %>% 
+         count(light) 
+
+```
+
+You may have noticed that there are three different categories of darkness, two of which are quite sparse. The following code creates a new variable called `light_cat` which combines these into a category called "Dark". Run the code chunk by clicking the green play button. Fill in the blanks in the code chunk below write code to make a frequency table of `light_cat`. Also create a bar plot without showing the accidents with NA for `light_cat`. 
+
+```{r recode-light}
+
+#Create a new variable called light_cat which takes the value "Dark" if the variable light
+#is one of the dark categories; otherwise it takes the value of the variable light
+
+accidents <- accidents %>% 
+             mutate( light_cat = ifelse(light %in% c("Dark - No Street Lights",
+                                                     "Dark - Street Lights Off",  
+                                                      "Dark - Street Lights On"), "Dark", light)) 
+```
+
+Fill in the blanks to create a bar plot for `light_cat` without showing the NA category.
+
+```{r part1-ex1-plot}
+
+#bar plot of light_cat
+ggplot(data = accidents %>% filter(!is.na(light_cat)),
+       mapping = aes(x = light_cat) ) +
+  geom_bar()
+```
+
+
+### Exercise 2
+
+Create a frequency table and bar plot to display the distribution of the variable `hit_parked_car`.
+
+```{r}
+accidents %>% count(hit_parked_car)
+
+ggplot(data = accidents,
+       mapping = aes(x = hit_parked_car))+
+  geom_bar()
+```
+
+
+
+* * * 
+
+The remaining exercises study the relationship between two categorical variables: `light_cat` and `hit_parked_car`.
+
+
+## Part II
+
+### Exercise 1 
+
+
+Fill in the blanks to make a segmented bar plot to visualize the relationship between `light_cat` and `hit_parked_car`. Describe the relationship in words. Think about which variable to place on the $x$ axis. Also, no need to include the NAs for `light_cat` in the graph.
+
+
+```{r part2-ex1}
+
+    ggplot( data = accidents %>% filter(!is.na(light_cat)) , 
+        mapping = aes( x = light_cat, 
+                       fill = hit_parked_car ) ) +
+     geom_bar( position = "fill" ) +
+     labs(x= "Light conditions", 
+         y = "Count",
+         fill = "Hit parked car", 
+         title =" Relationship between light conditions and hitting a parked car")
+    
+
+    
+```
+
+
+### Exercise 2
+
+Create a contingency table of the frequencies for `light_cat` and `hit_parked_car` with adornments as shown on page 16 of the slideck. Also type `?tabyl` in the Console to see the argument to suppress NAs.
+
+
+```{r part2-ex2}
+
+accidents %>% 
+  #filter(!is.na(light_cat)) %>%
+  tabyl( light_cat, hit_parked_car,show_na = FALSE) %>%
+  adorn_totals(where = "row") %>%
+  adorn_percentages(denominator = "row") %>%
+  adorn_pct_formatting(digits =2) %>%
+  adorn_ns() %>%
+  adorn_title()
+```
+
+
+### Exercise 3
+
+If there is no association between these variables, what % of cars should be hit regardless of light conditions? No code required.
+
+If there is no association, we should expect to see 11.88% of cars
+being hit under each light condition.
+Conversely, we should expect to see 88.12% of cars not being hit under
+each light condition.
+
+### Exercise 4
+
+Make a mosaicplot to visualize the contingency table from exercise 2. Write a couple of sentences to describe what you learn.
+
+```{r part2-ex4}
+
+mosaicplot(hit_parked_car ~ light_cat, data = accidents, shade = TRUE)
+
+```
+
+The mosaicplot shows that we observe  significantly more parked cars being hit in dark conditions and significantly less parked cars being hit in daylight. This supports the hypothesis that light conditions do relate to whether or not a parked car is hit. 
+
+
+## Part 3: More practice
+
+Do as many as you feel comfortable with and have time for.
+
+Suppose we want to know if `addr_type` is associated with `severity_desc`. Read about these variables in the code book. Then do the following.
+
+### Exercise 1
+
+Using `count`, make a frequency table of each variable separately.
+
+
+### Exercise 2
+
+Create and add a new variable to the `accidents` dataframe called `severity` variable which takes the same values as `severity_desc`, except that it combines the categories "Injury Collision" and "Serious Injury Collision" into one category called "Injury collision".
+
+
+
+### Exercise 3
+
+Make a segmented bar plot to visualize the relationship between `addr_type` and `severity`. Think about whether you want `addr_type` on the rows or the column. 
+
+
+
+### Exerise 4
+
+Create a contingency table of the frequencies for `addr_type` and `severity`. If there is no association between these variables, what % of collisions should be injury collisions regardless of address type? Think about whether you want `addr_type` on the rows or the column. 
+    
+
+
+### Exercise 5
+
+Make a mosaicplot to visualize the contingency table from Exercise 4.
+
