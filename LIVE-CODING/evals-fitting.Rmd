@@ -1,0 +1,130 @@
+---
+title: "Rate my Prof"
+subtitle: "STAT 311"
+author: "YOUR NAME HERE"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+# Introduction
+
+Many college courses conclude by giving students the opportunity to evaluate the course and the instructor anonymously. However, the use of these student evaluations as an indicator of course quality and teaching effectiveness is often criticized because these measures may reflect the influence of non-teaching related characteristics, such as the physical appearance of the instructor. The article titled, "Beauty in the classroom: instructors’ pulchritude and putative pedagogical productivity" (Hamermesh and Parker, 2005) found that instructors who are viewed to be better looking receive higher instructional ratings. (Daniel S. Hamermesh, Amy Parker, Beauty in the classroom: instructors pulchritude and putative pedagogical productivity, Economics of Education Review, Volume 24, Issue 4, August 2005, Pages 369-376, ISSN 0272-7757, 10.1016/j.econedurev.2004.07.013. http://www.sciencedirect.com/science/article/pii/S0272775704001165.)
+
+For this assignment you will analyze the data from this study in order to learn what goes into a positive professor evaluation.
+
+The data were gathered from end of semester student evaluations for a large sample of professors from the University of Texas at Austin. In addition, six students rated the professors’ physical appearance. 
+
+(This is a slightly modified version of the original data set that was released as part of the replication data for Data Analysis Using Regression and Multilevel/Hierarchical Models (Gelman and Hill, 2007).) The result is a data frame where each row contains a different course and columns represent variables about the courses and professors.
+
+# Learning goals
+
+-   Fitting linear models with numerical and categorical predictors
+
+-   Interpreting coefficients of the linear model
+
+-   Comparing models
+
+# Getting started
+
+## Packages
+
+In this activity we will work with the **tidyverse** package for much of the data wrangling and visualization, **tidymodels** for tidying the output and the data lives in the **openintro** package.
+
+```{r setup, include = FALSE}
+#load packages and set global options 
+
+library(tidyverse)     #umbrella package 
+library(openintro)     #for the data
+library(tidymodels)    #for model fitting/model comparison   
+
+```
+
+
+
+## The data
+
+The data can be found in the **openintro** package, and it’s called `evals`. Since the dataset is distributed with the package, we don’t need to load it separately; it becomes available to us when we load the package. You can find out more about the dataset by inspecting its documentation, which you can access by running ?evals in the Console or using the Help menu in RStudio to search for evals. You can also find this information here.
+
+
+## Exercises 
+
+### Part I: One numerical predictor
+
+In this part we will practice fitting a simple linear model with `score` as the response and `bty_avg` as the predictor variable. Remember that we usually begin by making displays of each variable by itself to identify skewness or other possible issues. But we will skip this for today and move right into a scatterplot.
+
+
+### Exercise 1
+
+Create a scatterplot of the relationship between `score` and `bty_avg`. Add a line to the plot using a `geom_smooth` layer. Comment on the form, direction and strength of the relationship.
+
+
+### Exercise 2
+
+Fit a simple linear regression model `evals_slr` predicting the course evaluation `score` from the `bty_avg`. Print the results in a tidy format. Write the equation of the fitted line and interpret the slope (and intercept).
+
+
+### Exercise 3
+
+Use your equation from Exercise 4 to predict the `score` for a professor whose `bty_avg` is 5. If their actual score was 4.5, calculate the prediction error.
+
+* * *
+
+## Part II: One numerical and one categorical predictor
+
+In this part, we will practice fitting a linear regression model with `score` as the response and `bty_avg` and `gender` as the predictor variables.
+
+### Exercise 1
+
+Does `gender` influence `score`? Make a boxplot to examine this. Also calculate numerical summaries of the score by gender.
+
+
+### Exercise 2
+
+Fit a main effects linear model, `evals_main`, predicting course evaluation `score` from average beauty rating (`bty_avg`) and `gender`. 
+
+- Print the coefficients of the model in a tidy format. 
+
+- Write the equation of the fitted lines for males and females. 
+
+- Make a scatter plot of `score` vs `bty_avg` with the points colored by gender and overlay the fitted lines from the main effects model.
+    
+- Interpret the model.
+  
+### Exercise 3
+
+Repeat exercise 2 for an interaction effects linear model, `evals_int`, which predicts course evaluation `score` from  average beauty rating (`bty_avg`), `gender` and their interaction. 
+
+
+### Exercise 4
+
+Compare the models from Parts I and II by calculating goodness of fit measures like $R^2$ and adjusted $R^2$.
+
+
+**PARTICIPATION: Please do your calculations for the following problem and then record your answers from the table into CANVAS for the quiz titled Participation 5**
+
+### Exercise 5
+
+Using the main effects model, `evals_main`, find the predicted score for a  female instructor who had a `bty_avg` score of 4.5? How about for a male instructor? Fill in the numbers in the table below for easy reference.
+
+|Gender | Predicted `score`  | 
+|:---   |    :---------      |
+|Female |                    |
+|Male   |                    |
+
+
+### Exercise 6
+
+Repeat the previous problem using the interaction effects model `evals_int`. 
+
+|Gender | Predicted `score`  | 
+|:---   |    :---------      |
+|Female |                    |
+|Male   |                    |
+
+
+
+
+## Acknowledgment
+
+This activity is from Data Science in a Box
