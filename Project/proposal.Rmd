@@ -1,0 +1,91 @@
+---
+title: "CATCHY TITLE HERE "
+subtitle: "DELETE IF NOT USED"
+author: "GROUP MEMBER NAMES HERE"
+date: "`r Sys.Date()`"
+output:    
+      html_document:
+         toc: yes
+         toc_float: yes
+---
+
+
+```{r setup, include = FALSE}
+#load packages, read in your dataset if external to a package, 
+#and set global options. I have set all code chunks to not echo,
+#and to not print messages or warnings.  If you want to echo a particular code chunk to highlight something, you can do this individually for that code chunk.
+
+
+library(tidyverse)        #umbrella package
+library(janitor)          #for tables 
+knitr::opts_chunk$set( echo = FALSE,    
+                       message = FALSE,
+                       warning = FALSE)
+
+
+gss_subset <- read_csv(file = "sub-data.txt",
+                       na = c(".d", ".i", ".j",".m",".n",".p",".q",".r",".s",".u",".x",".y",".z"))
+
+```
+
+## Introduction
+
+<!--- Delete the following text and write your introduction in its place  --->
+
+This section should introduce the data set and the scientific question. Please be sure to address each of the items listed below.
+
+- Do some independent research on the scientific context and importance of the questions that can be answered with this data and tell us about it. Please be sure to provide complete citations for any sources you consult at the end of the document in a bibliography section. 
+
+- Introduce the dataset. Provide a complete citation for the data, so we know exactly where you found it. You must include URLs for the data/data source.   
+
+-  Give details of who collected the data, how it was collected, who are the individuals in the data, what are the variables, etc. 
+
+- Create a **code book** of the variables in your data set. Your code book (aka data dictionary) must be a table which gives the name of the variables, a description of it , the class (numeric, categorical ) and the values the variable can take.
+
+| Header          |  Description
+|:----------------|:--------------------------------
+| `name of var`          | description  here
+| `name of var`          | description here
+
+- Then print out the output of `glimpse` of your data frame.
+
+```{r peek-at-data}
+
+
+```
+
+
+
+## Data Analysis Plan 
+
+<!--- Delete the following text and write your data analysis plan in its place.Create code chunks as you need for your analysis. --->
+
+The data analysis plan should include a description of:
+
+- The outcome (dependent, response, Y) variable which must be numerical and  the predictors (independent, explanatory, X) 
+variables you will use to answer your question. **There should be at least two numerical predictors and two categorical predictors. These are bare minimums. **
+
+- Any challenges you foresee in working with the data. Are there too many missing values? Are distributions highly skewed? 
+
+- Very preliminary exploratory data analysis, such as some summary statistics and 
+visualizations of some key variables, along with an explanation on how they help you learn more about your data. **Suggested division of labor: each member of the group is responsible for creating at least one visualization and calculating summaries statistics for at least one variable.** 
+
+
+
+Please be mindful about introducing in words what you are showing us before just printing off a bunch of output. Figures should be titled, have labels, etc.
+(You can add to these later as you work on your project..)
+ 
+
+## Bibliography
+
+<!--- Delete this section if not used. You may use the MLA or ALP format for listing references. Examples shown below.
+
+Brown, B. (2024). *Lecture Title*. Lecture slides, Course Name, University Name.
+
+Doe, J. (2020). Title of the Paper. *Journal Name*, 12(3), 45-67.
+
+Last, F., & Last, F. (2025). *Book Title*. Publisher.
+
+Smith, A., & Johnson, C. (2023). *Title of the Online Article*. Retrieved from https://www.example.com.
+
+--->
