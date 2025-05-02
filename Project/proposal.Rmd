@@ -63,7 +63,7 @@ This section should introduce the data set and the scientific question. Please b
 The data analysis plan should include a description of:
 
 - The outcome (dependent, response, Y) variable which must be numerical and  the predictors (independent, explanatory, X) 
-variables you will use to answer your question. **There should be at least three numerical predictors and two categorical predictors. These are bare minimums. **
+variables you will use to answer your question. **There should be at least three numerical predictors and three categorical predictors. These are bare minimums. **
 
 - Any challenges you foresee in working with the data. Are there too many missing values? Are distributions highly skewed? 
 
