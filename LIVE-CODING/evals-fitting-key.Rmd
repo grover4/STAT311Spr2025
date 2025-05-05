@@ -1,0 +1,293 @@
+---
+title: "Rate my Prof"
+subtitle: "STAT 311"
+author: "Ranjini Grove"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+# Introduction
+
+Many college courses conclude by giving students the opportunity to evaluate the course and the instructor anonymously. However, the use of these student evaluations as an indicator of course quality and teaching effectiveness is often criticized because these measures may reflect the influence of non-teaching related characteristics, such as the physical appearance of the instructor. The article titled, "Beauty in the classroom: instructors’ pulchritude and putative pedagogical productivity" (Hamermesh and Parker, 2005) found that instructors who are viewed to be better looking receive higher instructional ratings. (Daniel S. Hamermesh, Amy Parker, Beauty in the classroom: instructors pulchritude and putative pedagogical productivity, Economics of Education Review, Volume 24, Issue 4, August 2005, Pages 369-376, ISSN 0272-7757, 10.1016/j.econedurev.2004.07.013. http://www.sciencedirect.com/science/article/pii/S0272775704001165.)
+
+For this assignment you will analyze the data from this study in order to learn what goes into a positive professor evaluation.
+
+The data were gathered from end of semester student evaluations for a large sample of professors from the University of Texas at Austin. In addition, six students rated the professors’ physical appearance. 
+
+(This is a slightly modified version of the original data set that was released as part of the replication data for Data Analysis Using Regression and Multilevel/Hierarchical Models (Gelman and Hill, 2007).) The result is a data frame where each row contains a different course and columns represent variables about the courses and professors.
+
+# Learning goals
+
+-   Fitting linear models with numerical and categorical predictors
+
+-   Interpreting coefficients of the linear model
+
+-   Comparing models
+
+# Getting started
+
+## Packages
+
+In this activity we will work with the **tidyverse** package for much of the data wrangling and visualization, **tidymodels** for tidying the output and the data lives in the **openintro** package.
+
+```{r setup, include = FALSE}
+#load packages and set global options 
+
+library(tidyverse)     #umbrella package 
+library(openintro)     #for the data
+library(tidymodels)    #for model fitting/model comparison   
+
+```
+
+
+
+## The data
+
+The data can be found in the **openintro** package, and it’s called `evals`. Since the dataset is distributed with the package, we don’t need to load it separately; it becomes available to us when we load the package. You can find out more about the dataset by inspecting its documentation, which you can access by running ?evals in the Console or using the Help menu in RStudio to search for evals. You can also find this information here.
+
+
+## Exercises 
+
+### Part I: One numerical predictor
+
+In this part we will practice fitting a simple linear model with `score` as the response and `bty_avg` as the predictor variable. Remember that we usually begin by making displays of each variable by itself to identify skewness or other possible issues. But we will skip this for today and move right into a scatterplot.
+
+
+### Exercise 1
+
+Create a scatterplot of the relationship between `score` and `bty_avg`. Add a line to the plot using a `geom_smooth` layer. Comment on the form, direction and strength of the relationship.
+
+```{r ex1}
+ggplot(data = evals, 
+       mapping = aes( x = bty_avg, 
+                      y = score) )+ 
+  geom_point() + 
+  geom_smooth(method = "lm", se = F)
+
+
+```
+
+Form: mostly random noise, loosely oval shaped. 
+
+Direction: The relationship is positive in direction meaning higher values for x tend to go along with higher values for y. 
+
+Strength: The relationship is fairly weak.
+
+### Exercise 2
+
+Fit a simple linear regression model `evals_slr` predicting the course evaluation `score` from the `bty_avg`. Print the results in a tidy format. Write the equation of the fitted line and interpret the slope (and intercept).
+
+```{r ex2}
+
+evals_slr <- lm(score ~ bty_avg, 
+                data = evals) 
+tidy(evals_slr) 
+```
+
+The estimated equation for a linear model relating `score` to `bty_avg` :
+
+score-hat = 3.88 + 0.067*bty_avg
+
+
+Interpretation: 
+Slope: when the bty_avg score increases by 1, we expect that the course evaluation score will increase by .067.
+
+Intercept: For an instructor with a bty_avg of 0, we should expect their course evaluation score to be 3.88.
+
+
+
+### Exercise 3
+
+Use your equation from Exercise 4 to predict the `score` for a professor whose `bty_avg` is 5. If their actual score was 4.5, calculate the prediction error.
+
+
+```{r ex3}
+pred_scr <- 3.88 + 0.067*5
+pred_scr
+
+pred_err <- 4.5 -pred_scr   #obs y - predicted y
+
+pred_err
+
+```
+
+We predict that this instructor will get a score of `r pred_scr`. The prediction error is `r pred_err`.
+
+* * *
+
+## Part II: One numerical and one categorical predictor
+
+In this part, we will practice fitting a linear regression model with `score` as the response and `bty_avg` and `gender` as the predictor variables.
+
+### Exercise 1
+
+Does `gender` influence `score`? Make a boxplot to examine this. Also calculate numerical summaries of the score by gender.
+
+```{r part2-ex1}
+
+ggplot(data = evals, 
+       mapping = aes(x = score,
+                     fill = gender)) +
+  geom_boxplot() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank() )
+
+evals %>% 
+  group_by(gender) %>%
+  summarise( median_scr = median(score),
+             q25 = quantile(score, p = 0.25),
+             mean_scr = mean(score),
+             sd_scr = sd(score) )
+  
+#ggplot(data = evals,
+#       mapping = aes(x = bty_avg, 
+#                     y = score,
+#                     color = gender) ) +
+#  geom_point() 
+```
+
+
+### Exercise 2
+
+Fit a main effects linear model, `evals_main`, predicting course evaluation `score` from average beauty rating (`bty_avg`) and `gender`. 
+
+- Print the coefficients of the model in a tidy format. 
+
+- Write the equation of the fitted lines for males and females. 
+
+- Make a scatter plot of `score` vs `bty_avg` with the points colored by gender and overlay the fitted lines from the main effects model.
+    
+- Interpret the model.
+
+
+```{r part2ex2}
+evals_main <- lm(score ~ bty_avg + gender, data = evals) 
+
+tidy(evals_main)
+
+ggplot(data = evals, 
+       mapping = aes(x = bty_avg,
+                     y = score,
+                     color = gender) )+
+  geom_point() +
+  geom_abline(intercept = 3.747,
+              slope = 0.07, color = "red") +
+  geom_abline(intercept = 3.919,
+              slope = 0.07,
+              color = "turquoise")
+```
+
+The equation of the main effects model is
+
+score-hat = 3.747 + 0.07*bty_avg + 0.172*gendermale
+
+
+(Note: the variable gendermale is 1 for male faculty and 0 otherwise)
+
+For female faculty, the estimated equation is 
+score-hat = 3.747 + 0.07*bty_avg.
+
+For male faculty, the estimated equation is
+score-hat = 3.747 + 0.07*bty_avg + 0.172 = 3.919 + 0.07*bty_avg
+
+Interpretation:
+
+
+Slope: For an increase of 1 in the bty_avg, we expect an increase of 0.07 in the course evaluation score (regardless of gender).
+
+Difference in Intercepts: Regardless of the bty_avg score, male faculty receive an evaluation score that is 0.172 higher (on avg) than female faculty. 
+
+
+
+
+
+
+### Exercise 3
+
+Repeat exercise 2 for an interaction effects linear model, `evals_int`, which predicts course evaluation `score` from  average beauty rating (`bty_avg`), `gender` and their interaction. 
+
+
+```{r part2ex3}
+
+evals_int <- lm(score ~ bty_avg*gender, data = evals) 
+
+tidy(evals_int)
+
+ggplot(data = evals, 
+       mapping = aes(x = bty_avg,
+                     y = score,
+                     color = gender) )+
+  geom_point() +
+  geom_abline(intercept = 3.95,
+              slope = 0.03, color = "red") +
+  geom_abline(intercept = 3.766,
+              slope = 0.11,
+              color = "turquoise")
+
+```
+Equation of the interaction effects model is
+score-hat = 3.95 + 0.03*bty_avg -0.184*gendermale + 0.08*bty_avg*gendermale
+
+Equation for female faculty:
+score-hat = 3.95 + 0.03*bty_avg
+
+Equation for male faculty:
+score-hat = 3.95 + 0.03*bty_avg - 0.184 + 0.08*bty_avg = 3.766 + 0.11*bty_avg
+
+Interpretations: 
+
+Slope:
+For female faculty, an increase of 1 in the bty_avg corresponds to an expected increase of 0.03 in the course evaluation score.
+
+For male faculty, an increase of 1 in the bty_avg corresponds to an expected increase of 0.11 in the course evaluation score.
+
+Difference in intercepts: For a male and female faculty who both score "b" on their bty_avg, the difference in course evaluation scores is 
+3.766 + 0.11*b - 3.95 - 0.03*b =-0.19 + 0.08b
+
+
+
+### Exercise 4
+
+Compare the models from Parts I and II by calculating goodness of fit measures like $R^2$ and adjusted $R^2$.
+
+```{r part2ex4}
+
+glance(evals_main) %>%
+  select(r.squared, adj.r.squared)
+
+glance(evals_int) %>%
+  select(r.squared, adj.r.squared)
+
+
+```
+
+Based on the adjusted Rsquare, the main effects model seems like a reasonable compromise between variation explained and simplicity.
+
+**PARTICIPATION: Please do your calculations for the following problem and then record your answers from the table into CANVAS for the quiz titled Participation 5**
+
+### Exercise 5
+
+Using the main effects model, `evals_main`, find the predicted score for a  female instructor who had a `bty_avg` score of 4.5? How about for a male instructor? Fill in the numbers in the table below for easy reference.
+
+|Gender | Predicted `score`  | 
+|:---   |    :---------      |
+|Female |                    |
+|Male   |                    |
+
+
+### Exercise 6
+
+Repeat the previous problem using the interaction effects model `evals_int`. 
+
+|Gender | Predicted `score`  | 
+|:---   |    :---------      |
+|Female |                    |
+|Male   |                    |
+
+
+
+
+## Acknowledgment
+
+This activity is from Data Science in a Box
