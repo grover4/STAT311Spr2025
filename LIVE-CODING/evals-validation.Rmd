@@ -1,0 +1,116 @@
+---
+title: "Rate my Prof: Model validation"
+subtitle: "STAT 311"
+date: "`r Sys.Date()`"
+output:    html_document
+---
+
+
+We will return to the `evals` dataframe from the **openintro** package one last time to practice the workflow for training and testing models. 
+
+
+Let's go ahead and load the packages we will need for the analysis.
+
+## Packages
+
+We will work with the **tidyverse**, **tidymodels** and the **openintro** packages as before. Run the following code chunk to load the packages we will need in your working environment.
+
+
+
+```{r setup, message = FALSE, warning = FALSE}
+#load packages and set global options 
+
+library(tidyverse)     #umbrella package 
+library(openintro)     #for the data
+library(tidymodels)    #for model fitting/model comparison   
+
+```
+
+Load the dataset `evals` into your working environment as well by typing `data(evals)`.
+
+## Exercises 
+
+### Exercise 1
+
+Create two subsets of the data called `evals_train` and `evals_test` by randomly choosing 80% of the rows in the `evals` dataframe for the training data and the remaining 20% for the testing. (Use 11 as the random number seed). 
+ 
+
+```{r ex1, eval = FALSE}
+set.seed(_)
+
+evals_split <- initial_split( ___, prop = __)
+evals_train <- ___(evals_split)
+evals_test <- ___(evals_split) 
+
+
+```
+
+
+Over the last week, we have considered the following three models for these data:
+
+- Model 1: score ~ bty_avg + gender 
+
+- Model 2: score ~ bty_avg*gender
+
+- Model 3: score ~ bty_avg + cls_perc_eval + cls_level
+
+
+
+### Exercise 2
+
+Fit Model 1 using the `evals_train` data. Save the output from running `lm` in an object called `model1`. Also find the adjusted Rsquared for this model and enter it in the table below (rounded to 4 digits) as a percentage using inline code.
+
+
+
+```{r ex2, eval = FALSE}
+
+___ <- lm(___ ~ ___ , data = ___) 
+
+
+model1_rsq <- glance(model1) %>% 
+                   select(___) %>% 
+                     pull()         #this will extract the adjusted R square as a numeric
+```
+
+### Exercise 3
+
+
+Fill in the blanks to calculate the Root Mean Square Error of prediction for `model1` model using `evals_test`. Also enter this number in the table below using inline R code.
+
+```{r ex3, eval = F}
+
+rmse_model1 <- model1 %>% 
+                augment(newdata =  ___ ) %>% 
+                  rmse(truth = ___, estimate = ___ ) %>%
+                   pull()
+
+```
+
+
+### Exercise 4
+
+Repeat exercises 2 and 3 for Model 2 and Model 3. Then fill in the blanks in the table below showing the adjusted R-squared and also the RMSE for each model.
+
+```{r}
+#fit model2 and model 3 to evals_train
+#use each fitted model to make predictions for evals_test
+#calculate the rmse for each model
+
+
+```
+
+**PARTICIPATION 6: Please record the training adjusted R-square and the testing RMSE for the models  2 and 3 in the table below. Then enter the answers in CANVAS. **
+
+|Model | Training adjusted R2  (as a %)   | Testing RMSE
+|----- | ----------------------------     |-------------            
+|1     |                                  | 
+|2     |                                  |  
+|3     |                                  | 
+
+
+Which model would you pick as your final choice?
+
+
+## Acknowledgment
+
+This activity is from Data Science in a Box
