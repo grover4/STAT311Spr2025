@@ -127,7 +127,7 @@ We will do so using a technique known as the bootstrap method. The idea is that 
 
 ### Exercise 3
 
-Fill in the blanks in the code chunk below to implement the bootstrap method to draw 1,000 new samples of size $n = 127$ from the bootstrapped population, and calculate the mean number of `credits` for each.  
+Fill in the blanks in the code chunk below to implement the bootstrap method to draw 1,000 new samples of size $n = 122$ from the bootstrapped population, and calculate the mean number of `credits` for each.  
 
 ```{r bootstrap-mean-credits, eval = FALSE}
 set.seed (45)            #for reproducibility
