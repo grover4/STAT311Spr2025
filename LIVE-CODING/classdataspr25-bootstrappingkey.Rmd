@@ -1,0 +1,515 @@
+---
+title: "Bootstrapping the Class Survey "
+subtitle: "Ranjini Grove"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+In this report we will analyze survey responses from STAT 311 students collected at the start of spring quarter 2025. Specifically, we are interested in going beyond summaries to make inferences about all UW students. We will primarily focus on constructing interval estimates for population  values using the bootstrap methods.
+
+
+
+The packages we will be using have been loaded in the code chunk below. You can add additional packages as necessary. 
+
+```{r setup, include=FALSE}
+#setup code chunk is where you load the packages, set options, read in data
+
+library(tidyverse)      #umbrella suite
+library(tidymodels)     #for bootstrapping with infer
+library(skimr)          #for skimming variables
+
+
+knitr::opts_chunk$set(    
+                       message = FALSE,
+                       warning = FALSE)
+
+
+classdata <- read_csv(file="classdata_spr2025.csv")  #read in data
+
+```
+
+## Data
+
+The class data was collected via a Google form and was downloaded as a CSV file named `classdata_spr2025.csv`. The codebook with a description of the variables in the dataset is shown below. The overall data cleaning steps were extremely minimal. I renamed the variables so they were shorter. Additional data cleaning and recoding is done for the variables involved in specific analyses and these will be described in the relevant sections. All the code is included in the Rmarkdown document. 
+
+```{r data-cleaning, include = FALSE}
+
+#code below renames the variables
+
+classdata <- classdata %>%
+             rename( class = contains("class standing"),
+                     credits = contains("credits"),
+                     diet = contains("vegetarian"),
+                     sleep = contains("sleep"),
+                     dating_pref=contains("attractive"),
+                     sex=contains("sex"),
+                     study=contains("study"),
+                     birthday=contains("born"),
+                     haircut=contains("haircut"),
+                     shoes=contains("shoes"),
+                     nervous=contains("nervous"),
+                     siblings=contains("siblings"),
+                     which_tire=contains("tire"),
+                     height=contains("height"),
+                     speed=contains("fastest"),
+                     years_in_wa=contains("WA state"),
+                     travel=contains("visited"),
+                     salary=contains("earn"),
+                     breakfast=contains("breakfast"),
+                     eyewear=contains("eyeglasses"),
+                     rent=contains("rent"),
+                     climate_worry = contains("global warming") ) 
+
+classdata <- classdata %>% 
+  filter( credits >= 12)
+
+
+classdata <- classdata %>% 
+  mutate(height1 = case_when(
+        height == 182 | height == 165 ~ NA, 
+        height == 5.11 ~ 71,
+        height == 6.00 ~ 72,
+        TRUE           ~ height) )
+
+classdata <- classdata %>% 
+  mutate(dating_pref1 = na_if(dating_pref, "yes, No"),
+         sex1 = na_if(sex, "Prefer not to answer"))
+```
+
+
+|Variable |  Description |
+| :----:  |  :--------  |
+|Timestamp| Self explanatory |
+|class    | What is your class standing?|
+|credits  | How many credits are you signed up for in Spr 2025?|
+|diet| Are you a vegetarian?|
+|sleep    | How many hours of sleep do you get on average at night?|
+|dating_pref| Would you date someone with a great personality even if you did not find them attractive? |
+| sex     | What is your biological sex? |
+|study    |How many hours do you study outside of classes (on average) per week? (if this is your first quarter at UW, you may skip this question) |
+|birthday | What day of the week were you born? |
+|haircut | What is the most (in dollars) you have paid for a haircut? |
+|shoes   | How many pairs of shoes do you own? |
+|nervous | How nervous are you about taking STAT 311?|
+|siblings | How many siblings do you have? (include step sibs too)|
+|which_tire| Suppose you were late to an exam and decided to use the "flat tire" excuse. Which tire would you  pick?|
+|height | What is your height (in inches)?|
+|speed| What is the fastest you have driven (mph)|
+|years_in_wa | How many years have you lived in WA state? (enter 0 if none, round your answer to a whole number)|
+|travel |How many states in the U.S. have you visited?|
+|salary| How much money did you earn last year (in dollars )? |
+|breakfast| Do you usually eat breakfast in the morning?|
+|eyewear | Do you wear eyeglasses or contact lenses?|
+|rent | What is your monthly rent?|
+|climate_worry| Scientists predict that global warming may have big effects on the polar regions within the next 100 years. One of the possible effects is that the northern ice cap may completely melt. Would this bother you a great deal, some, a little, or not at all if it actually happened?|
+
+
+
+
+## Part 1: How many credits?
+
+In this section, we will estimate the number of credits that UW students signed up for in Spring 2025 using our class as the sample.  
+
+The first step in any data analysis is to become acquainted with the data. We begin by skimming the variable `credits` to get a bird's eye view of the values, missingness and other possible issues. 
+
+```{r skim-credits}
+classdata %>% skim(credits)
+
+```
+
+We notice that we have a mix of students, those who are studying full time and also part time students. It makes sense to only consider one of these groups since they are different populations of students. Let's go back to the data cleaning code chunk and extract just the rows for students who are taking at least 12 credits. This will be our `classdata` for the rest of the analysis.
+
+
+### Exercise 1
+
+Make a plot to display the distribution of `credits`. 
+
+```{r part1-ex1}
+
+ggplot(data = classdata,
+       mapping = aes(x = credits)) +
+  geom_histogram(binwidth = 1.5)
+
+```
+
+The shape is fairly symmetric. 
+
+### Exercise 2
+
+Based on our class, what is your estimate for the average number of credits that UW students signed up for in Spring 2025?
+
+```{r part1-ex2, echo = TRUE}
+obs_mean <- classdata %>% 
+    summarise(mean_cr = mean(credits) ) %>%
+    pull() 
+
+
+```
+
+I would estimate that the full time students at UW were signed up for an average of 15.86 credits in spring 2025.
+
+
+
+As we know, estimates from samples can vary (depending on the individuals in our sample), so it is important to assess how this number might vary across samples taken from the population of UW students who are registered full-time. 
+We will do so using a technique known as the bootstrap method. The idea is that we clone the population using our sample. Then we:
+
+-   **Step 1.** Take a new sample from the cloned (bootstrapped) population.
+-   **Step 2.** Calculate the summary - such as mean, median, proportion, slope, etc. from the new sample.
+-   **Step 3.** Repeat steps (1) and (2) many times.
+
+
+### Exercise 3
+
+Fill in the blanks in the code chunk below to implement the bootstrap method to draw 1,000 new samples of size $n = 122$ from the bootstrapped population, and calculate the mean number of `credits` for each.  
+
+```{r bootstrap-mean-credits}
+set.seed (45)            #for reproducibility
+    
+boot_mean.df <- classdata %>% 
+      specify( response = credits ) %>% 
+      generate(reps = 1000, type = "bootstrap") %>% 
+      calculate(stat = "mean")
+```
+
+
+### Exercise 4
+
+Make a histogram to display the distribution of the mean `credits` from the 1,000 resamples. 
+
+```{r part1-ex4}
+ggplot(data = boot_mean.df, 
+       mapping = aes(x = stat)) +
+  geom_histogram(binwidth = 0.1) +
+  labs(title = "Bootstrapped distribution of average number of credits") 
+
+```
+
+
+The histogram of the sample means in Exercise 4 is an approximation of the variability we would see if we could sample repeatedly from the actual population.
+
+### Exercise 5
+
+Use your histogram from Exercise 4 to calculate a 95% interval estimate for the mean number of credits taken by all full-time students at UW. Then report it with a sentence.
+
+```{r calc-interval}
+boot_mean.df %>% 
+      summarise( lower = quantile(stat, 0.025),
+                 upper = quantile(stat, 0.975))
+    
+```
+  
+A 95% bootstrapped percentile interval estimate for the average number of credits that full-time UW students took in spring 2025 is in the range 15.5 to 16.2.
+
+
+It turns out that according to data pulled on 5/1 from UW Academic Data Management, the average number of credits that full-time UW students signed up for in Spring 2025 is 15.1. Does our interval contain this value in it? If not, what do you think went wrong?
+    
+My interval misses the target. One possible is that STAT 311 students do not necessarily represent all full-time UW students.
+
+Another possible reason is that many STAT 311 students overstated the number of credits they were taking since the survey was done on 3/28.
+
+    
+* * *
+
+The bootstrap method can be used to generate interval estimates for any population number, such the mean, median, difference of means, slope etc. 
+
+In the next part we will use the method to inform variable selection in a linear model.
+I will also suggest a workflow that may be helpful for your project.
+
+* * *
+
+## Part II: Fastest you have driven?
+
+Suppose you want to build a model for the variable `speed` which measures the fastest you have ever driven. A possible numeric predictor is `height`. For categorical predictors, we can look at `eyewear` and also `dating_pref`.
+
+- Examine these variables in the dataset and decide on whether they need cleaning or filtering etc. If so, do this in the data cleaning code chunk at the top.
+
+- After cleaning/recoding the data, split the data into a 80/20 training and testing set. You should only split the data when it is ready for analysis.
+
+**Note: you can alternately do the data cleaning manually in Excel and upload your final data set. Just be sure everyone in the group is using the same dataset**
+
+```{r split-data}
+
+set.seed(141)   #set the seed so everyone has the same data split
+
+classdata_split <- initial_split(classdata, prop = 0.8)
+classdata_train <- training(classdata_split)
+classdata_test <- testing(classdata_split)
+```
+
+Use the training data for exercises 1 - 6.
+
+
+### Exercise 1
+
+Examine the distribution of your response variable `speed`. Also summarize this distribution.
+
+```{r part2-ex1}
+
+ggplot(data = classdata_train,
+       mapping = aes(x = speed) ) + 
+  geom_histogram(binwidth = 10) 
+```
+
+
+Next, we will consider adding some predictors to explain the variation in fastest `speed` reported. We have several approaches we can take to informally identify possible predictors.
+
+- you can subjectively decide if a predictor is meaningful
+
+- you can make plots to examine the relationship of the predictor with $x$ (scatterplot, corrplot if numeric, boxplot for categorical)
+
+- you can calculate an interval estimate for the "true" effect of that variable on the response.  If the interval does not contain 0, that is a good reason to add it to the model.  (This is primarily the focus today)
+
+As an example, say we want to consider the numeric variable `height` as a possible predictor of `study`.  
+
+
+### Exercise 2
+
+Make a scatterplot of `height` (use recoded version) versus `speed`. Does there appear to be a relationship?
+Fit a line and examine the slope estimate.
+
+```{r part2-ex3}
+
+ggplot(data = classdata_train,
+       mapping = aes(x = height1,
+                     y = speed,
+                     color = sex)) +
+  geom_point() 
+```
+
+### Exercise 3
+
+Use the bootstrap method to find a 95% interval estimate for the effect of `height` on `speed`. Does your interval suggest you should include this variable in your model? Use a seed of 114.
+
+```{r}
+set.seed(114)
+
+boot_slope.df <- classdata_train %>%
+  specify(response = speed, 
+          explanatory = height1) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "slope")
+
+ggplot(data = boot_slope.df,
+       mapping = aes(x = stat)) + 
+  geom_histogram()
+
+
+
+boot_slope.df %>% 
+  summarise( lower = quantile(stat, 0.025), 
+             upper = quantile(stat, 0.975) )
+
+```
+
+Since this interval estimate of the true effect of height is -0.34 - 1.53, which contains 0, we could choose to leave the variable height out of the model.
+
+
+
+Now, suppose we want to consider `eyewear` as a possible categorical predictor of `speed`. 
+
+### Exercise 4
+
+Make a boxplot of `speed` versus `eyewear`. Also find the difference in mean speeds between those who do and do not use eyewear. Just informally, does there appear to be a relationship?
+
+```{r part2-ex4}
+
+ggplot(data = classdata_train,
+       mapping = aes(x = speed,
+                     y = eyewear)) +
+  geom_boxplot() 
+
+classdata_train %>%
+  group_by(eyewear) %>%
+  summarise(mean_speed = mean(speed, na.rm = TRUE))
+```
+
+The difference in mean (fastest) speeds reported for those who don't wear eyewear is 11.7 miles higher than those who do.
+
+
+### Exercise 5
+
+
+Fill in the blanks in the code chunk below to implement the bootstrap method to create 1,000 samples and calculate the difference in mean `speed` between those who wear `eyewear` and those who do not (No - Yes) for each resample. Then find a 95% interval estimate for the true effect of `eyewear` on `speed`. Does your interval suggest you should include this variable in your model?
+
+
+
+```{r bootstrap-diff-means-eyewear}
+set.seed(1122)
+
+
+
+boot_diff_means.df <- classdata_train %>% 
+                     specify( response = speed,     
+                              explanatory = eyewear) %>% 
+                       generate(reps = 1000, 
+                                type = "bootstrap") %>% 
+                       calculate(stat = "diff in means", 
+                                order = c("No", "Yes"))
+   
+ggplot(data = boot_diff_means.df, 
+       mapping = aes(x = stat)) +
+  geom_histogram() +
+  labs(title = "Bootstrapped distribution of difference in mean speeds\n (No - yes) for eyewear") 
+
+
+boot_diff_means.df %>%
+  summarise( lower = quantile(stat, 0.025), 
+             upper = quantile(stat, 0.975) )
+  
+```
+
+My interval estimate for the true difference in mean speeds driven by those who don't wear eyewear versus those who do is in the range 2.05 mph - 21.35 mph. Since this provides some evidence that the true difference is positive (not zero), we can think about including this variable in our model.
+
+
+### Exercise 6
+
+Repeat exercises 4 and 5 with `dating_pref` (use recoded version) as the explanatory variable. Use a seed of 944 for the bootstrap implementation.
+
+```{r part2-ex6}
+### descriptive/exploratory
+ggplot(data = classdata_train,
+       mapping = aes(x = speed,
+                     y = dating_pref1)) +
+  geom_boxplot() 
+
+classdata_train %>%
+  group_by(dating_pref1) %>%
+  summarise(mean_speed = mean(speed, na.rm = TRUE))
+
+###bootstrap
+
+set.seed(944)
+
+boot_diff_means_dating.df <- classdata_train %>%
+  filter(!is.na(dating_pref1)) %>%
+  specify(response = speed, explanatory = dating_pref1) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "diff in means", order = c("No", "yes")) 
+
+boot_diff_means_dating.df %>%
+  summarise(lower = quantile(stat, 0.025),
+            upper = quantile(stat, 0.975))
+```
+
+The difference in mean (fastest) speeds reported for those who said "no" is 16.2 miles higher than those who said "yes".
+
+My interval estimate for the true difference in mean speeds reported by those who say "no" versus "yes" is in the range 8.18 to 23.97 mph. This is one reason to include this variable in the model. It also makes sense from a subject matter point of view because it's reasonable to think that someone who is mature in their outlook and not overly superficial may also be somewhat risk averse.
+
+**If there is time, we will do the following ** 
+
+### Exercise 7
+
+I would recommend adding `sex` to the models since it is plausible that it is related to differences in risk taking behaviors. Also, it is highly confounded with height, so if we want to isolate the effect of height, it is best to include sex in the model. 
+
+Prep:  Examine the variable `sex` and replace "Prefer not to answer" with NAs. Do this in the data cleaning code chunk. 
+
+Then re-run the data split code chunk so your training and testing data have this newly recoded variable.
+
+Then fit the following models to your training data and calculate their adjusted Rsquare. Also find their root mean square error using the testing data.
+
+Model 1: speed ~ height + sex
+
+Model 2: speed ~ height + sex + eyewear
+
+Model 3: speed ~ height + sex + dating_pref
+
+Model 4: speed ~ height + sex + eyewear + dating_pref
+
+
+
+```{r part2-ex7}
+### Model1
+model1 <- lm(speed ~ height1 + sex1, data = classdata_train)
+tidy(model1) 
+
+glance(model1) %>% select(adj.r.squared)
+
+model1 %>% augment(newdata = classdata_test) %>% 
+  rmse(truth = speed, estimate = .fitted)
+
+
+###Model 2
+
+model2 <- lm(speed ~ height1 + sex1 + eyewear, data = classdata_train)
+tidy(model2) 
+
+glance(model2) %>% select(adj.r.squared)
+
+model2 %>% augment(newdata = classdata_test) %>% 
+  rmse(truth = speed, estimate = .fitted)
+
+### Model3
+model3 <- lm(speed ~ height1 + sex1 + dating_pref1, data = classdata_train)
+tidy(model3) 
+
+glance(model3) %>% select(adj.r.squared)
+
+model3 %>% augment(newdata = classdata_test) %>% 
+  rmse(truth = speed, estimate = .fitted)
+
+### Model4
+model4 <- lm(speed ~ height1 + sex1 + dating_pref1 + eyewear, data = classdata_train)
+tidy(model4) 
+
+glance(model4) %>% select(adj.r.squared)
+
+model4 %>% augment(newdata = classdata_test) %>% 
+  rmse(truth = speed, estimate = .fitted)
+
+
+```
+
+Interpretations:
+
+Model 2: speed-hat = 77.8 + 0.27*height1 + 2.3*sexMale -10.3*eyewearYes
+
+Slope: For an inch increase in height, the mean speed is expected to increase by 0.27 mph. (This is true for male/female, also for those who wear eyewear or not)
+
+Difference in intercepts:
+
+sexMale: 
+All else fixed, males are expected to report a mean speed which is 2.3 mph higher than females.
+
+eyewearYes:
+All else fixed, those who wear eyewear are expected to report a mean speed which is 10.3 miles lower than those who do not.
+
+* * *
+Model1: speed-hat = 82.1 + 0.12*height1 + 5.6*sexMale
+
+Slope: for an inch increase in the height, we can expect an increase of 0.12 mph in the average speed reported.
+
+Intercept: 82.1 is not meaningful to report by itself because it represents the average speed when height1 is 0 and for females. A height of 0 is not meaningful, so we don't interpret this.
+
+Difference in intercepts: For any height (i.e., holding height fixed), males are more likely to report driving 5.6 mph faster than females.
+
+* * *
+
+| Model |   adjusted Rsq (training)  | RMSE  (testing) |
+| :---: |   :----------------:       | :--------:      |
+|   1   |           .05%             |   24.8          |
+|   2   |           4.5%             |   27.4          |
+|   3   |          16.2%             |   28.4          |
+|   4   |          17.4%             |   28.4          |                         
+We would pick model 3 based on the principle of Occam's razor.
+
+Once we have chosen our model, we go ahead and fit it to the whole dataset.
+
+
+```{r final-results}
+final_model <- lm(speed ~ height1 + sex1+ dating_pref1, data = classdata) 
+
+tidy(final_model) 
+```
+
+Interpretation of final model:
+
+speed-hat = 52.4 + 0.72*height -0.10*sexMale - 13.1*dating_prefyes
+
+Slope:
+Height: All else fixed, for an inch increase in height, there is an expected increase of 0.72 mph in reported speeds.
+
+sexMale: All else fixed, "males" report speeds that are 0.1 mph lower than "females".
+
+dating_prefyes: All else fixed, those who say "yes" are expected to report 13.1 mph lower than those say "no"
+
+
