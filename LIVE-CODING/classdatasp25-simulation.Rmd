@@ -1,0 +1,211 @@
+---
+title: "Significance testing the class survey "
+subtitle: "YOUR NAME"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Today we will conduct significance tests by simulation to analyze survey responses from STAT 311 students collected at the start of spring quarter 2025. 
+
+The packages and data we will be using have been loaded in the code chunk below.
+
+```{r setup, include=FALSE}
+#setup code chunk is where you load the packages, set options, read in data
+
+library(tidyverse)      #umbrella suite
+library(tidymodels)     #for bootstrapping with infer
+library(skimr)          #for skimming variables
+library(janitor)        #for making tabyl
+
+knitr::opts_chunk$set( message = FALSE,
+                       warning = FALSE)
+
+
+classdata <- read_csv(file="classdata_spr2025.csv")  #read in data
+
+```
+
+
+## Data
+
+The class data was collected via a Google form and was downloaded as a CSV file named `classdata_spr2025.csv`. The codebook with a description of the variables in the dataset is shown below. The overall data cleaning steps were extremely minimal. I renamed the variables so they were shorter. We are also restricting attention to full-time students.
+
+
+```{r data-cleaning, include = FALSE}
+
+#code below renames the variables
+
+classdata <- classdata %>%
+             rename( class = contains("class standing"),
+                     credits = contains("credits"),
+                     diet = contains("vegetarian"),
+                     sleep = contains("sleep"),
+                     dating_pref=contains("attractive"),
+                     sex=contains("sex"),
+                     study=contains("study"),
+                     birthday=contains("born"),
+                     haircut=contains("haircut"),
+                     shoes=contains("shoes"),
+                     nervous=contains("nervous"),
+                     siblings=contains("siblings"),
+                     which_tire=contains("tire"),
+                     height=contains("height"),
+                     speed=contains("fastest"),
+                     years_in_wa=contains("WA state"),
+                     travel=contains("visited"),
+                     salary=contains("earn"),
+                     breakfast=contains("breakfast"),
+                     eyewear=contains("eyeglasses"),
+                     rent=contains("rent"),
+                     climate_worry = contains("global warming") ) 
+
+classdata <- classdata %>% 
+  filter( credits >= 12)
+
+```
+
+
+|Variable |  Description |
+| :----:  |  :--------  |
+|Timestamp| Self explanatory |
+|class    | What is your class standing?|
+|credits  | How many credits are you signed up for in Win 2022?|
+|vegetarian| Are you a vegetarian?|
+|sleep    | How many hours of sleep do you get on average at night?|
+|dating_pref| Would you date someone with a great personality even if you did not find them attractive? |
+| sex     | What is your biological sex? |
+|study    |How many hours do you study outside of classes (on average) per week? (if this is your first quarter at UW, you may skip this question) |
+|birthday | What day of the week were you born? |
+|section  | Which quiz section are you in? |
+|haircut | What is the most (in dollars) you have paid for a haircut? |
+|shoes   | How many pairs of shoes do you own? |
+|nervous | How nervous are you about taking STAT 311?|
+|siblings | How many siblings do you have? (include step sibs too)|
+|which_tire| Suppose you were late to an exam and decided to use the "flat tire" excuse. Which tire would you  pick?|
+|height | What is your height (in inches)?|
+|years_in_wa | How many years have you lived in WA state? (enter 0 if none, round your answer to a whole number)|
+|travel |How many states in the U.S. have you visited?|
+|salary| How much money did you earn last year (in dollars )? |
+|breakfast| Do you usually eat breakfast in the morning?|
+|eyewear | Do you wear eyeglasses or contact lenses?|
+|rent | What is your monthly rent?|
+|climate_worry| Scientists predict that global warming may have big effects on the polar regions within the next 100 years. One of the possible effects is that the northern ice cap may completely melt. Would this bother you a great deal, some, a little, or not at all if it actually happened?|
+
+
+## Part 1: which tire would you pick?
+
+The column `which_tire` in `classdata` contains responses to the question "Suppose you were late to an exam and decided to use the flat tire excuse. Which tire would you pick? " The choices given to the student were: left front, right front, left back and right back. 
+
+Researchers have found that when asked this question, people tend to pick the front tires more often than you might expect if they were randomly choosing among the four tires. Does the intro survey data provide evidence to support this claim? Let's do a hypothesis test to answer this question.
+
+First, make a frequency distribution of the variable `which_tire`. 
+Then create and add a new variable `front_tire` which takes the value "yes" for respondents who chose a front tire and "no" if they chose a back tire.
+
+
+### Exercise 1
+
+Calculate the proportion of respondents who picked a front tire from our class. Use R as a calculator to write code to calculate this and save it in a variable called `obs_prop`. Then write a sentence stating the proportion using inline code. 
+
+   
+Since the proportion of sample respondents who picked the right front is clearly larger than 50%, it provides some evidence for our hypothesis. 
+
+However, the skeptical mindset requires us to consider the possibility that our high percentage could be explained away by sampling variability. 
+
+We will therefore need to conduct a significance test to see whether this is in fact a plausible explanation.
+
+
+### Exercise 2
+
+A significance test pits the following two claims against each other. Which one represents the null and which one is the alternative hypothesis? 
+
+a. People are equally likely to pick a front tire as they are a back tire.
+    
+b. People are more likely to pick a front tire than they are a back tire.
+    
+ 
+
+### Exercise 3
+
+Describe in words (no code needed for this part) how you could simulate outcomes under the null hypothesis using a box with two kinds of tickets. Be sure to describe the contents of the box, how many draws you will make from it, and what you will calculate once you have drawn your sample. 
+
+
+### Exercise 4
+
+Use `tidymodels` to implement your scheme from Exercise 3. Fill in the blanks in the code below. Once filled in, remove the `eval = FALSE` chunk option.
+
+```{r null-simulation, eval = FALSE, cache = TRUE}
+
+#caching memory intensive code chunks is helpful since they will only be re-run
+#if there is any change to the code.
+
+set.seed(65)
+
+null_sim <- classdata %>%
+                ___(response = ___, 
+                        success = "___") %>%
+                ___(null = "___", p = ___) %>%
+                ___( reps = ___, type = "___") %>%
+                ___(stat = "___")
+
+```
+
+### Exercise 5
+
+Fill in the blanks to visualize the null distribution of the sample proportion and calculate the P-value to assess how unusually large our value is. 
+
+```{r visualize-null, eval = FALSE}
+ 
+null_sim %>% visualize() + 
+      shade_p_value(obs_stat = ___, 
+                    direction = "___")
+    
+null_sim %>% get_p_value(obs_stat = ___, direction = "___")
+    
+```
+
+
+     
+     
+A small P-value tells us that our sample result lies in a tail of the null distribution. In this instance, that the sample result is unusually large relative to what we should see when the null is true. It supports the alternative hypothesis better than it does the null hypothesis.
+
+
+Therefore we can reject the null hypothesis and conclude that the evidence suggests prople are more likely to pick a front tire when asked this question.
+
+
+**Please do your calculations for the exercises below and then record your answers for Exercises 1 and 5  in the CANVAS quiz titled PARTICIPATION 8**
+
+## Part II: Would melting ice caps bother you?
+
+The `climate_worry` column records your response to the question: "Scientists predict that global warming may have big effects on the polar regions within the next 100 years. One of the possible effects is that the northern ice cap may completely melt. Would this bother you a great deal, some, a little, or not at all if it actually happened?"
+
+First make a frequency table of the variable `climate_worry`. Then create and add a new variable - `worried` - which takes the value "yes" if the respondent answered "A great deal" and no if they picked one of the other options.  
+
+
+### Exercise 1
+
+Calculate the proportion of respondents who said they would be bothered "a great deal". Write code in the code chunk below to calculate this and save it in a variable called `obs_prop`. Then write a sentence stating the proportion using inline code. 
+
+
+### Exercise 2
+
+A survey found that 63% of all Americans would be bothered a great deal by melting ice caps. Does our sample data provide strong evidence that this percentage is actually lower than we think?  Which of the following claims represents the null and which one is the alternative hypothesis? 
+ 
+a. 63% of people are bothered a great deal by melting ice caps.
+    
+b. Less than 63% of people are bothered a great deal by melting ice caps.
+
+### Exercise 3
+
+Describe in words (no code needed for this part) how you could simulate outcomes under the null hypothesis using a box with two kinds of tickets. Be sure to describe the contents of the box, how many draws you will make from it, and what you will calculate once you have drawn your sample. 
+
+### Exercise 4
+
+Use `tidymodels` to implement your scheme from Exercise 3.  
+Use a seed of 5575.
+
+
+
+### Exercise 5
+
+Calculate the P-value  and make a conclusion. 
+
