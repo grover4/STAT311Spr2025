@@ -1,0 +1,207 @@
+---
+title: "Significance testing the class survey contd. "
+subtitle: "YOUR NAME"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Today we will test independence between two variables by conducting significance tests which use permutation as a way to mimic sampling variability. The data are the survey responses from STAT 311 students collected at the start of spring quarter 2025. 
+
+The packages and data we will be using have been loaded in the code chunk below.
+
+```{r setup, include=FALSE}
+#setup code chunk is where you load the packages, set options, read in data
+
+library(tidyverse)      #umbrella suite
+library(tidymodels)     #for bootstrapping with infer
+library(skimr)          #for skimming variables
+library(janitor)        #for making tabyl
+
+knitr::opts_chunk$set( message = FALSE,
+                       warning = FALSE)
+
+
+classdata <- read_csv(file="classdata_spr2025.csv")  #read in data
+
+```
+
+
+## Data
+
+The class data was collected via a Google form and was downloaded as a CSV file named `classdata_spr2025.csv`. The codebook with a description of the variables in the dataset is shown below. The overall data cleaning steps were extremely minimal. I renamed the variables so they were shorter. We are also restricting attention to full-time students.
+
+```{r data-cleaning, include = FALSE}
+
+#code below renames the variables
+
+classdata <- classdata %>%
+             rename( class = contains("class standing"),
+                     credits = contains("credits"),
+                     diet = contains("vegetarian"),
+                     sleep = contains("sleep"),
+                     dating_pref=contains("attractive"),
+                     sex=contains("sex"),
+                     study=contains("study"),
+                     birthday=contains("born"),
+                     haircut=contains("haircut"),
+                     shoes=contains("shoes"),
+                     nervous=contains("nervous"),
+                     siblings=contains("siblings"),
+                     which_tire=contains("tire"),
+                     height=contains("height"),
+                     speed=contains("fastest"),
+                     years_in_wa=contains("WA state"),
+                     travel=contains("visited"),
+                     salary=contains("earn"),
+                     breakfast=contains("breakfast"),
+                     eyewear=contains("eyeglasses"),
+                     rent=contains("rent"),
+                     climate_worry = contains("global warming") ) 
+
+#only full-time students
+
+classdata <- classdata %>% 
+  filter( credits >= 12)
+
+#prep variables
+classdata <- classdata %>%
+   mutate(dating_pref = na_if(dating_pref, "yes, No"),
+          sex = na_if(sex, "Prefer not to answer"))
+
+```
+
+
+|Variable |  Description |
+| :----:  |  :--------  |
+|Timestamp| Self explanatory |
+|class    | What is your class standing?|
+|credits  | How many credits are you signed up for in Win 2022?|
+|vegetarian| Are you a vegetarian?|
+|sleep    | How many hours of sleep do you get on average at night?|
+|dating_pref| Would you date someone with a great personality even if you did not find them attractive? |
+| sex     | What is your biological sex? |
+|study    |How many hours do you study outside of classes (on average) per week? (if this is your first quarter at UW, you may skip this question) |
+|birthday | What day of the week were you born? |
+|section  | Which quiz section are you in? |
+|haircut | What is the most (in dollars) you have paid for a haircut? |
+|shoes   | How many pairs of shoes do you own? |
+|nervous | How nervous are you about taking STAT 311?|
+|siblings | How many siblings do you have? (include step sibs too)|
+|which_tire| Suppose you were late to an exam and decided to use the "flat tire" excuse. Which tire would you  pick?|
+|height | What is your height (in inches)?|
+|years_in_wa | How many years have you lived in WA state? (enter 0 if none, round your answer to a whole number)|
+|travel |How many states in the U.S. have you visited?|
+|salary| How much money did you earn last year (in dollars )? |
+|breakfast| Do you usually eat breakfast in the morning?|
+|eyewear | Do you wear eyeglasses or contact lenses?|
+|rent | What is your monthly rent?|
+|climate_worry| Scientists predict that global warming may have big effects on the polar regions within the next 100 years. One of the possible effects is that the northern ice cap may completely melt. Would this bother you a great deal, some, a little, or not at all if it actually happened?|
+
+
+## Part 1
+
+
+The variable `dating_pref` contains responses to the question "Would you date someone with a great personality even if you did not find them attractive?" In this exercise, we will conduct a hypothesis test to see whether, in general, males are less likely than females to say "yes".
+
+EDA: 
+
+Create a contingency `tabyl` showing the relationship between  `sex` and `dating_pref`.  
+
+### Exercise 1
+
+Use R as a calculator to find the difference between the proportions of men and women who respond "yes" to the `dating_pref` question (Male - Female). Save this difference in a variable called `obs_diff`.
+
+
+```{r data-summary, eval = FALSE}
+
+classdata %>% tabyl(sex, dating_pref, show_na = F) %>%
+              adorn_title()
+
+obs_diff <- 22/55 - 34/59
+
+mosaicplot(dating_pref~sex, data = classdata, shade=TRUE)
+```
+
+
+
+Clearly men are less likely than women to agree that they would be willing date someone they don't find attractive. But the difference is small. In this part, we will examine whether this difference can be explained by sampling variability or if it points to a substantive difference between men and women.
+
+
+### Exercise 2
+
+Which of the following claims represents the null and which one is the alternative hypothesis? 
+
+a. Males are less likely than Females to say they are open to dating someone they don't find attractive 
+    
+b. Males and Females are equally likely to be open to dating someone they don't find attractive. Any differences we observe are due to sampling variability.
+    
+
+
+
+3. Describe in words (no code needed for this part) how you could simulate outcomes under the null hypothesis by shuffling a deck with two kinds of cards.
+
+
+    
+4. Fill in code to create a benchmark of what we should see for outcomes if the null hypothesis is true. You will get an error. Think about how to fix it.
+
+```{r null-sim, eval = FALSE, cache = TRUE}
+set.seed(141)
+
+null_dist <- classdata %>%
+             ___(response = __, 
+                     explanatory = ___, 
+                     success = "___") %>%
+             ___(null = "___") %>%
+             ___(reps = ___, type = "___") %>%
+             ___(stat = "___", 
+                        order=c("___", "___") )
+
+
+```
+
+5. Visualize the null distribution and calculate the P-value and make a conclusion. 
+
+
+
+
+## Part II: Are non-vegetarians more likely to eat breakfast?
+
+In this section you will repeat the exercises in Part 1 to see if non-vegetarians are more likely to eat breakfast.
+
+Data prep:
+
+- Examine the variables `diet` and `breakfast`. Create a new variable in the data cleaning code chunk called `diet1` that takes the values "nonveg" when `diet` is "No" and is "veg" otherwise.
+
+EDA:
+
+Create a table to summarize the relationship between the variables `diet1` and `breakfast`. 
+
+### Exercise 1
+
+
+As the table makes clear, non-vegetarians are more likely in our sample to report eating breakfast. In this part, we will examine whether this difference can be explained by sampling variability or if it points to a substantive effect of diet.
+
+### Exercise 2
+
+Which of the following claims represents the null and which one is the alternative hypothesis? 
+
+a. Non-vegetarians are more likely than vegeterians to eat breakfast
+    
+b. Diet has no relationship with eating breakfast; any differences we observe are simply due to sampling variability.
+    
+
+### Exercise 3
+
+Using `tidymodels` create a benchmark of what we should see for outcomes if the null hypothesis is true. Use a seed of 311. Create the null distribution of the difference in proportions who eat breakfast (nonveg - veg).
+
+### Exercise 4
+
+Visualize the null distribution 
+
+### Exercise 5
+
+Calculate the P-value to assess how unusually large the difference in proportions is in the null distribution.
+
+
+
+
